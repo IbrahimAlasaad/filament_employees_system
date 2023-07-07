@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\EmployeeResource\Pages;
 use App\Filament\Resources\EmployeeResource\RelationManagers;
+use App\Filament\Resources\EmployeeResource\Widgets\EmployeeStatsOverview;
 use App\Models\Employee;
 use App\Models\Country;
 use App\Models\State;
@@ -27,7 +28,7 @@ class EmployeeResource extends Resource
     protected static ?string $model = Employee::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
-
+    
     public static function form(Form $form): Form
     {
         return $form
@@ -42,7 +43,9 @@ class EmployeeResource extends Resource
                     // Select::make('country_id')->relationship('country','name'), 
 
                     //dependant dropdown
-                    Select::make('country_id')->label('country')->options(Country::all()->pluck('name','id')->toArray())->reactive(),
+                    Select::make('country_id')->label('country')->options(Country::all()->pluck('name','id')->toArray())->reactive()
+                    ->afterStateUpdated(fn(callable $set)=>$set('state_id',null)),
+                    
                     Select::make('state_id')->label('state')
                     ->options(function(callable $get){
                         $country=Country::find($get('country_id'));
@@ -52,6 +55,8 @@ class EmployeeResource extends Resource
                         }
                         return $country->states->pluck('name','id');
                     }),
+                    
+                    
                     Select::make('state_id')->relationship('state','name'), 
                     Select::make('city_id')->relationship('city','name'), 
                     Select::make('department_id')->relationship('department','name'), 
@@ -89,7 +94,12 @@ class EmployeeResource extends Resource
             //
         ];
     }
-    
+    public static function getWidgets(): array
+    {
+        return [
+            EmployeeStatsOverview::class,
+        ];
+    }
     public static function getPages(): array
     {
         return [
